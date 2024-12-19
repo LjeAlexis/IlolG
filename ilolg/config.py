@@ -10,4 +10,7 @@ RIOT_API_KEY = os.getenv("RIOT_API_KEY")
 # Token du bot Discord
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 
+print(f"RIOT_API_KEY: {RIOT_API_KEY}")
+print(f"DISCORD_TOKEN: {DISCORD_TOKEN}")
+
 

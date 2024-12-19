@@ -1,5 +1,6 @@
-from features.leaderboard import add_player, remove_player
-from lol_api import get_player_puuid
+from features.leaderboard import add_player, remove_player, get_leaderboard
+from ilolg.lol_api import get_player_puuid
+
 @bot.command(name="addplayer")
 async def add_player_command(ctx, summoner_name: str):
     """Commande pour ajouter un joueur au leaderboard."""
@@ -24,3 +25,20 @@ async def remove_player_command(ctx, summoner_name: str):
         await ctx.send(f"Joueur {summoner_name} supprimé avec succès.")
     else:
         await ctx.send(f"Le joueur {summoner_name} n'existe pas dans la liste.")
+
+@bot.command(name="leaderboard")
+async def leaderboard_command(ctx):
+    """Commande pour afficher le leaderboard avec les ranks et les LP."""
+    try:
+        leaderboard = get_leaderboard()
+        if not leaderboard:
+            await ctx.send("Le leaderboard est vide pour l'instant.")
+            return
+
+        message = "\u2b50 **Leaderboard actuel** \u2b50\n"
+        for i, player in enumerate(leaderboard, start=1):
+            message += f"{i}. {player['summoner_name']} - {player['rank']} ({player['lp']} LP)\n"
+
+        await ctx.send(message)
+    except Exception as e:
+        await ctx.send(f"Erreur lors de l'affichage du leaderboard : {e}")

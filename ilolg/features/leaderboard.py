@@ -1,4 +1,5 @@
 import json
+from ilolg.lol_api import get_player_rank_and_lp
 
 PLAYERS_FILE = "data/players.json"
 
@@ -32,3 +33,31 @@ def remove_player(summoner_name):
         return False  # Aucun joueur supprimé
     save_players(updated_players)
     return True
+
+def get_leaderboard():
+    """Récupère le leaderboard avec les ranks et les LP."""
+    players = load_players()
+    leaderboard = []
+    for player in players:
+        rank_and_lp = get_player_rank_and_lp(player["puuid"])
+        leaderboard.append({
+            "summoner_name": player["summoner_name"],
+            "rank": rank_and_lp.get("rank", "N/A"),
+            "lp": rank_and_lp.get("lp", 0)
+        })
+    leaderboard.sort(key=lambda x: (-x["lp"], x["rank"]))  # Trier par LP desc et rank
+    return leaderboard
+
+def generate_leaderboard():
+    """Génère un leaderboard fictif pour les tests."""
+    players = load_players()
+    leaderboard = []
+    for player in players:
+        rank_and_lp = get_player_rank_and_lp(player["puuid"])
+        leaderboard.append({
+            "summoner_name": player["summoner_name"],
+            "rank": rank_and_lp.get("rank", "Unranked"),
+            "lp": rank_and_lp.get("lp", 0)
+        })
+    return leaderboard
+
