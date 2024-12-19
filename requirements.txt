@@ -1,3 +1,2 @@
-discord.py
-python-dotenv
-requests
+pytest>=7.0.0
+black>=23.0.0

@@ -1,5 +1,5 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from features.leaderboard import generate_leaderboard, format_leaderboard
+from ilolg.features.leaderboard import generate_leaderboard, format_leaderboard
 
 def start_scheduler(bot):
     scheduler = AsyncIOScheduler()

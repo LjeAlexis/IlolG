@@ -22,7 +22,7 @@ Homepage = "https://votre-repo.github.io"
 Source = "https://github.com/votre-repo"
 
 [tool.setuptools.packages.find]
-where = ["ilolg"]
+where = ["."]
 
 [project.scripts]
 lol-discord-bot = "ilolg.bot:main"
