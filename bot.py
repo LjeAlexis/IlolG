@@ -1,6 +1,5 @@
 from features.leaderboard import add_player, remove_player
 from lol_api import get_player_puuid
-
 @bot.command(name="addplayer")
 async def add_player_command(ctx, summoner_name: str):
     """Commande pour ajouter un joueur au leaderboard."""
