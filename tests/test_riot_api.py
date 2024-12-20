@@ -28,4 +28,4 @@ def test_player_stats(gameName, tagLine, region="EUW"):
         print(f" - Défaites : {stats['losses']}")
 
 if __name__ == "__main__":
-    test_player_stats("Ekoes", "", region="EUW")
+    test_player_stats("Skiarah", "euw", region="EUW")

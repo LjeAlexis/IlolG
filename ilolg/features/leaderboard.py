@@ -1,4 +1,5 @@
 import json
+import time
 from ilolg.lol_api import get_player_rank_and_lp
 
 PLAYERS_FILE = "data/players.json"
@@ -16,12 +17,17 @@ def save_players(players):
     with open(PLAYERS_FILE, "w") as file:
         json.dump(players, file, indent=4)
 
-def add_player(summoner_name, puuid):
+def add_player(summoner_name, puuid, region="EUW"):
     """Ajoute un joueur au fichier."""
     players = load_players()
     if any(player["puuid"] == puuid for player in players):
         return False  # Le joueur est déjà dans la liste
-    players.append({"summoner_name": summoner_name, "puuid": puuid})
+    players.append({
+        "summoner_name": summoner_name,
+        "puuid": puuid,
+        "region": region,
+        "last_updated": 0  # Initialise comme non mis à jour
+    })
     save_players(players)
     return True
 
@@ -38,26 +44,20 @@ def get_leaderboard():
     """Récupère le leaderboard avec les ranks et les LP."""
     players = load_players()
     leaderboard = []
-    for player in players:
-        rank_and_lp = get_player_rank_and_lp(player["puuid"])
-        leaderboard.append({
-            "summoner_name": player["summoner_name"],
-            "rank": rank_and_lp.get("rank", "N/A"),
-            "lp": rank_and_lp.get("lp", 0)
-        })
-    leaderboard.sort(key=lambda x: (-x["lp"], x["rank"]))  # Trier par LP desc et rank
-    return leaderboard
 
-def generate_leaderboard():
-    """Génère un leaderboard fictif pour les tests."""
-    players = load_players()
-    leaderboard = []
     for player in players:
-        rank_and_lp = get_player_rank_and_lp(player["puuid"])
-        leaderboard.append({
-            "summoner_name": player["summoner_name"],
-            "rank": rank_and_lp.get("rank", "Unranked"),
-            "lp": rank_and_lp.get("lp", 0)
-        })
-    return leaderboard
+        # Vérifie si les données sont récentes (moins de 24h)
+        if time.time() - player.get("last_updated", 0) > 86400:
+            rank_and_lp = get_player_rank_and_lp(player["puuid"], player["region"])
+            player["rank"] = rank_and_lp.get("rank", "Unranked")
+            player["lp"] = rank_and_lp.get("lp", 0)
+            player["wins"] = rank_and_lp.get("wins", 0)
+            player["losses"] = rank_and_lp.get("losses", 0)
+            player["last_updated"] = time.time()  # Met à jour la timestamp
+        leaderboard.append(player)
 
+    save_players(players)  # Sauvegarde les mises à jour
+    return sorted(
+        leaderboard,
+        key=lambda x: (-x["lp"], x["rank"])  # Trier par LP desc et rang
+    )
