@@ -10,7 +10,14 @@ RIOT_API_KEY = os.getenv("RIOT_API_KEY")
 # Token du bot Discord
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 
+#token du serv discord 
+DISCORD_SERV_ID= os.getenv("DISCORD_SERV_ID")
+
+#Token du canal Discord
+DISCORD_CHANNEL_ID = os.getenv("DISCORD_CHANNEL_ID")
+
 print(f"RIOT_API_KEY: {RIOT_API_KEY}")
 print(f"DISCORD_TOKEN: {DISCORD_TOKEN}")
+print(f"DISCORD_CHANNEL_ID: {DISCORD_CHANNEL_ID}")
 
 

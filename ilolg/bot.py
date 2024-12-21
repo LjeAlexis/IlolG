@@ -2,14 +2,34 @@ import discord
 from discord.ext import commands
 from features.leaderboard import add_player, remove_player, get_leaderboard, load_players, save_players
 from ilolg.lol_api import get_player_puuid
+import os
+from dotenv import load_dotenv
+
+# Charger les variables d'environnement
+load_dotenv()
+DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+DISCORD_CHANNEL_ID = int(os.getenv("DISCORD_CHANNEL_ID", 0))  # ID du canal Discord
+
+if not DISCORD_TOKEN:
+    print("Token Discord non trouvé. Veuillez le définir dans le fichier .env.")
+    exit()
+
+if DISCORD_CHANNEL_ID == 0:
+    print("ID de canal non trouvé. Veuillez le définir dans le fichier .env.")
+    exit()
 
 # Initialisation du bot
 intents = discord.Intents.default()
 bot = commands.Bot(command_prefix="!", intents=intents)
+intents.message_content = True  # Activer l'accès au contenu des messages
+
 
 @bot.event
 async def on_ready():
     print(f"Bot connecté en tant que {bot.user}")
+    channel = bot.get_channel(DISCORD_CHANNEL_ID)
+    if channel:
+        await channel.send("Salut tout le monde ! Le bot est en ligne et prêt à fonctionner. 🎉")
 
 @bot.command(name="addplayer")
 async def add_player_command(ctx, summoner_name: str, region: str = "EUW"):
@@ -99,14 +119,5 @@ async def list_players_command(ctx):
     except Exception as e:
         await ctx.send(f"Erreur lors de l'affichage des joueurs : {e}")
 
-# Lancer le bot avec le token depuis l'environnement
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
-
-if not DISCORD_TOKEN:
-    print("Token Discord non trouvé. Veuillez le définir dans le fichier .env.")
-else:
-    bot.run(DISCORD_TOKEN)
+# Lancer le bot
+bot.run(DISCORD_TOKEN)
