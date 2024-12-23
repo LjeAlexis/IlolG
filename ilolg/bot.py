@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from features.leaderboard import add_player, remove_player, get_leaderboard, load_players, save_players
 from ilolg.lol_api import get_player_puuid
+from features.leaderboard_scheduler import start_leaderboard_scheduler
 import os
 from dotenv import load_dotenv
 
@@ -30,26 +31,36 @@ async def on_ready():
     channel = bot.get_channel(DISCORD_CHANNEL_ID)
     if channel:
         await channel.send("Salut tout le monde ! Le bot est en ligne et prêt à fonctionner. 🎉")
+    
+    start_leaderboard_scheduler(bot, DISCORD_CHANNEL_ID)
+
 
 @bot.command(name="addplayer")
-async def add_player_command(ctx, summoner_name: str, region: str = "EUW"):
+async def add_player_command(ctx, riot_id: str, region: str = "EUW"):
     """Commande pour ajouter un joueur au leaderboard."""
     try:
-        await ctx.send(f"Recherche du joueur {summoner_name} dans la région {region}...")
-        
+        # Séparer le Riot ID en gameName et tagLine
+        if "#" not in riot_id:
+            await ctx.send("Le Riot ID doit être au format `gameName#tagLine` (ex: Alez#8201).")
+            return
+
+        game_name, tag_line = riot_id.split("#")
+        await ctx.send(f"Recherche du joueur {game_name}#{tag_line} dans la région {region}...")
+
         # Récupérer le PUUID via l'API Riot
-        puuid = get_player_puuid(summoner_name, tagLine=region, region=region)
+        puuid = get_player_puuid(game_name, tag_line, region=region)
         if not puuid:
-            await ctx.send(f"Impossible de trouver le joueur {summoner_name} dans la région {region}.")
+            await ctx.send(f"Impossible de trouver le joueur {game_name}#{tag_line} dans la région {region}.")
             return
 
         # Ajouter le joueur au leaderboard
-        if add_player(summoner_name, puuid, region):
-            await ctx.send(f"Joueur {summoner_name} ajouté avec succès.")
+        if add_player(f"{game_name}#{tag_line}", puuid, region):
+            await ctx.send(f"Joueur {game_name}#{tag_line} ajouté avec succès.")
         else:
-            await ctx.send(f"Le joueur {summoner_name} est déjà dans la liste.")
+            await ctx.send(f"Le joueur {game_name}#{tag_line} est déjà dans la liste.")
     except Exception as e:
         await ctx.send(f"Erreur lors de l'ajout : {e}")
+
 
 @bot.command(name="removeplayer")
 async def remove_player_command(ctx, summoner_name: str):

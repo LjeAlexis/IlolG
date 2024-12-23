@@ -16,6 +16,9 @@ DISCORD_SERV_ID= os.getenv("DISCORD_SERV_ID")
 #Token du canal Discord
 DISCORD_CHANNEL_ID = os.getenv("DISCORD_CHANNEL_ID")
 
+#Schedule Interval 
+SCHEDULE_INTERVAL = os.getenv("SCHEDULE_INTERVAL")
+
 print(f"RIOT_API_KEY: {RIOT_API_KEY}")
 print(f"DISCORD_TOKEN: {DISCORD_TOKEN}")
 print(f"DISCORD_CHANNEL_ID: {DISCORD_CHANNEL_ID}")
