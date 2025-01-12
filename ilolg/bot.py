@@ -4,6 +4,7 @@ from features.leaderboard.leaderboard import get_leaderboard, load_players, save
 from features.leaderboard.leaderboard_scheduler import *
 from ilolg.lol_api import get_player_puuid
 from features.manage_player.player_manager import add_player, remove_player
+from features.live_tracker.live_tracking_scheduler import start_live_tracker_scheduler
 import os
 from dotenv import load_dotenv
 
@@ -35,7 +36,9 @@ async def on_ready():
         await channel.send("Salut tout le monde ! Le bot est en ligne et prêt à fonctionner. 🎉")
 
     # Démarrer le scheduler
-    start_leaderboard_scheduler(bot, DISCORD_CHANNEL_ID)
+    #start_leaderboard_scheduler(bot, DISCORD_CHANNEL_ID)
+    start_live_tracker_scheduler(bot, DISCORD_CHANNEL_ID) 
+
 
 
 @bot.command(name="addplayer")
