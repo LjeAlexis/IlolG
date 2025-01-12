@@ -2,8 +2,10 @@ import json
 from utils.rank_model import RankModel  
 import time
 from ilolg.lol_api import get_player_rank_and_lp
-from ilolg.features.manage_player.player_manager import *
+from ilolg.features.manage_player.player_manager import PlayerManager
 
+#Fix that api call and save dep to leaderboard 
+player_manager = PlayerManager()
 
 def get_leaderboard(force_update=False):
     """
@@ -15,7 +17,7 @@ def get_leaderboard(force_update=False):
     Returns:
         list: Liste des joueurs triée par LP décroissant et rang.
     """
-    players = load_players()
+    players = player_manager.load_players()
     leaderboard = []
 
     for player in players:
@@ -45,7 +47,7 @@ def get_leaderboard(force_update=False):
 
     # Trier le leaderboard
     leaderboard.sort(key=rank_key)
-    save_players(players)  # Sauvegarde les mises à jour
+    player_manager.save_players(players)  # Sauvegarde les mises à jour
     return leaderboard
 
 

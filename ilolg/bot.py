@@ -1,13 +1,16 @@
 import discord
 from discord.ext import commands
-from features.leaderboard.leaderboard import get_leaderboard, load_players, save_players
+from features.leaderboard.leaderboard import get_leaderboard
 from features.leaderboard.leaderboard_scheduler import *
 from ilolg.lol_api import get_player_puuid
-from features.manage_player.player_manager import add_player, remove_player
+from features.manage_player.player_manager import PlayerManager
 from features.live_tracker.live_tracking_scheduler import start_live_tracker_scheduler
 import os
 from dotenv import load_dotenv
 
+
+
+player_manager = PlayerManager()
 
 # Charger les variables d'environnement
 load_dotenv()
@@ -36,7 +39,7 @@ async def on_ready():
         await channel.send("Salut tout le monde ! Le bot est en ligne et prêt à fonctionner. 🎉")
 
     # Démarrer le scheduler
-    #start_leaderboard_scheduler(bot, DISCORD_CHANNEL_ID)
+    start_leaderboard_scheduler(bot, DISCORD_CHANNEL_ID)
     start_live_tracker_scheduler(bot, DISCORD_CHANNEL_ID) 
 
 
@@ -60,7 +63,7 @@ async def add_player_command(ctx, riot_id: str):
             return
 
         # Ajouter le joueur via player_manager
-        if add_player(f"{game_name}#{tag_line}", puuid):
+        if player_manager.add_player(f"{game_name}#{tag_line}", puuid):
             await ctx.send(f"Joueur {game_name}#{tag_line} ajouté avec succès.")
         else:
             await ctx.send(f"Le joueur {game_name}#{tag_line} est déjà dans la liste.")
@@ -72,7 +75,7 @@ async def add_player_command(ctx, riot_id: str):
 async def remove_player_command(ctx, summoner_name: str):
     """Commande pour supprimer un joueur du leaderboard."""
     try:
-        if remove_player(summoner_name):
+        if player_manager.remove_player(summoner_name):
             await ctx.send(f"Joueur {summoner_name} supprimé avec succès.")
         else:
             await ctx.send(f"Le joueur {summoner_name} n'existe pas dans la liste.")
