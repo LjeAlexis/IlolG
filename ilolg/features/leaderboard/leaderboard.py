@@ -2,35 +2,7 @@ import json
 from utils.rank_model import RankModel  
 import time
 from ilolg.lol_api import get_player_rank_and_lp
-
-PLAYERS_FILE = "./ilolg/data/players.json"
-
-def load_players():
-    """Charge les joueurs depuis le fichier."""
-    try:
-        print(f"Chargement du fichier : {PLAYERS_FILE}")
-        with open(PLAYERS_FILE, "r") as file:
-            players = json.load(file)
-            print(f"Joueurs chargés : {players}")
-            return players
-    except FileNotFoundError:
-        print(f"Fichier {PLAYERS_FILE} introuvable. Retourne une liste vide.")
-        return []
-    except json.JSONDecodeError:
-        print(f"Fichier {PLAYERS_FILE} vide ou corrompu. Réinitialisation avec une liste vide.")
-        save_players([])  
-        return []
-
-def save_players(players):
-    """Sauvegarde les joueurs dans le fichier."""
-    try:
-        print(f"Sauvegarde des joueurs : {players}")
-        with open(PLAYERS_FILE, "w") as file:
-            json.dump(players, file, indent=4)
-        print("Sauvegarde réussie.")
-    except Exception as e:
-        print(f"Erreur lors de la sauvegarde : {e}")
-        raise
+from ilolg.features.manage_player.player_manager import *
 
 
 def get_leaderboard(force_update=False):
@@ -47,11 +19,15 @@ def get_leaderboard(force_update=False):
     leaderboard = []
 
     for player in players:
+        # Ajouter une vérification de la région par défaut
+        if "region" not in player:
+            player["region"] = "EUW"  # Défaut si manquant
+
         previous_lp = player.get("lp", 0)
         previous_rank = player.get("rank", "Unranked")
 
         # Forcer l'actualisation ou vérifier si les données sont récentes
-        if force_update or time.time() - player.get("last_updated", 0) > 0:  # Toujours mettre à jour
+        if force_update or time.time() - player.get("last_updated", 0) > 86400:  # 24 heures
             rank_and_lp = get_player_rank_and_lp(player["puuid"], player["region"])
             player["rank"] = rank_and_lp.get("rank", "Unranked")
             player["lp"] = rank_and_lp.get("lp", 0)
@@ -66,6 +42,12 @@ def get_leaderboard(force_update=False):
             )
 
         leaderboard.append(player)
+
+    # Trier le leaderboard
+    leaderboard.sort(key=rank_key)
+    save_players(players)  # Sauvegarde les mises à jour
+    return leaderboard
+
 
 def rank_key(player):
     rank_split = player["rank"].split()  # Ex: "SILVER II" -> ["SILVER", "II"]

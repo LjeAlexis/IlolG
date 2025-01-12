@@ -1,27 +1,33 @@
 import json
+import os
 
-PLAYERS_FILE = "data/players.json"
+PLAYERS_FILE = "./data/players.json"
+
+def ensure_data_file_exists():
+    """Assure que le fichier JSON et le dossier data existent."""
+    os.makedirs(os.path.dirname(PLAYERS_FILE), exist_ok=True)  # Crée le dossier si nécessaire
+    if not os.path.isfile(PLAYERS_FILE):  # Vérifie si le fichier existe
+        with open(PLAYERS_FILE, "w") as file:
+            json.dump([], file)  # Initialise un fichier JSON vide
 
 def load_players():
-    """Charge les joueurs depuis le fichier JSON."""
-    try:
-        with open(PLAYERS_FILE, "r") as file:
-            return json.load(file)
-    except FileNotFoundError:
-        return []
+    ensure_data_file_exists()  # Assure l'existence du fichier avant de charger
+    with open(PLAYERS_FILE, "r") as file:
+        return json.load(file)
 
 def save_players(players):
-    """Sauvegarde les joueurs dans le fichier JSON."""
+    ensure_data_file_exists()  # Assure l'existence du fichier avant de sauvegarder
     with open(PLAYERS_FILE, "w") as file:
         json.dump(players, file, indent=4)
 
-def add_player(summoner_name, puuid):
+def add_player(summoner_name, puuid, region="EUW"):
     """
     Ajoute un joueur à la liste des joueurs.
 
     Args:
         summoner_name (str): Nom de l'invocateur.
         puuid (str): Identifiant unique du joueur.
+        region (str): Région du joueur (par défaut : "EUW").
 
     Returns:
         bool: True si le joueur a été ajouté, False s'il existait déjà.
@@ -29,9 +35,10 @@ def add_player(summoner_name, puuid):
     players = load_players()
     if any(player["puuid"] == puuid for player in players):
         return False  # Le joueur existe déjà
-    players.append({"summoner_name": summoner_name, "puuid": puuid})
+    players.append({"summoner_name": summoner_name, "puuid": puuid, "region": region})
     save_players(players)
     return True
+
 
 def remove_player(summoner_name):
     """
