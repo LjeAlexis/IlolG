@@ -1,7 +1,10 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from ilolg.features.leaderboard import get_leaderboard
+from ilolg.features.leaderboard.leaderboard import get_leaderboard
 import discord
 from config import SCHEDULE_INTERVAL
+
+
+SCHEDULE_INTERVAL = int(SCHEDULE_INTERVAL)
 
 async def update_and_publish_leaderboard(bot, channel_id):
     """
@@ -17,23 +20,29 @@ async def update_and_publish_leaderboard(bot, channel_id):
         return
 
     try:
-        # Actualise les données des joueurs et récupère le leaderboard
         leaderboard = get_leaderboard(force_update=True)
 
         # Génère le message du leaderboard
         if not leaderboard:
             message = "Le leaderboard est vide pour l'instant."
         else:
-            message = "\u2b50 **Leaderboard actuel avec tendances** \u2b50\n"
+            message = "\u2b50 **Leaderboard actuel** \u2b50\n"
             for i, player in enumerate(leaderboard, start=1):
+                lp_change = player.get('lp_change', 0)
+                if lp_change > 0:
+                    lp_change_arrow = "⬆️"
+                elif lp_change < 0:
+                    lp_change_arrow = "⬇️"
+                else:
+                    lp_change_arrow = "↔️"
+
+                # Générer la ligne du joueur avec la flèche correspondante
                 message += (
                     f"{i}. **{player['summoner_name']}** - *{player['rank']}* "
-                    f"({player['lp']} LP, {player['wins']}W/{player['losses']}L)\n"
-                    f"    🔼 **{player['lp_change']} LP** {player['rank_change']}\n"
-                    )
+                    f"({player['lp']} LP, {player['wins']}W/{player['losses']}L) {lp_change_arrow} {abs(lp_change)} LP\n"
+                )
 
 
-        # Envoie le message dans le canal Discord
         await channel.send(message)
         print(f"Leaderboard publié et mis à jour dans le canal {channel_id}")
     except Exception as e:

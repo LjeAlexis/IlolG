@@ -17,7 +17,7 @@ DISCORD_SERV_ID= os.getenv("DISCORD_SERV_ID")
 DISCORD_CHANNEL_ID = os.getenv("DISCORD_CHANNEL_ID")
 
 #Schedule Interval 
-SCHEDULE_INTERVAL = os.getenv("SCHEDULE_INTERVAL")
+SCHEDULE_INTERVAL = int(os.getenv("SCHEDULE_INTERVAL", 1))  # Défaut à 60 minutes
 
 print(f"RIOT_API_KEY: {RIOT_API_KEY}")
 print(f"DISCORD_TOKEN: {DISCORD_TOKEN}")

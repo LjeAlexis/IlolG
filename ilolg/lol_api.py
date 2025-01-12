@@ -99,3 +99,44 @@ def get_player_rank_and_lp(puuid, region="EUW"):
         print(f"Erreur lors de la récupération des stats : {e}")
         return {'rank": "N/A", "lp": 0, "wins": 0, "losses": 0'}
 
+def get_match_ids(puuid, start=0, count=1):
+    """
+    Récupère les IDs des matchs d'un joueur.
+
+    Args:
+        puuid (str): PUUID du joueur.
+        start (int): Index de départ pour récupérer les matchs.
+        count (int): Nombre de matchs à récupérer.
+
+    Returns:
+        list: Liste des IDs des matchs.
+    """
+    try:
+        url = f"{BASE_URL}/lol/match/v5/matches/by-puuid/{puuid}/ids?start={start}&count={count}"
+        headers = {"X-Riot-Token": RIOT_API_KEY}
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        return response.json()  # Retourne une liste de match_ids
+    except requests.RequestException as e:
+        print(f"Erreur lors de la récupération des IDs des matchs : {e}")
+        return []
+
+def get_match_details(match_id):
+    """
+    Récupère les détails d'un match spécifique.
+
+    Args:
+        match_id (str): ID du match.
+
+    Returns:
+        dict: Détails du match.
+    """
+    try:
+        url = f"{BASE_URL}/lol/match/v5/matches/{match_id}"
+        headers = {"X-Riot-Token": RIOT_API_KEY}
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        return response.json()  # Retourne les détails du match
+    except requests.RequestException as e:
+        print(f"Erreur lors de la récupération des détails du match : {e}")
+        return {}

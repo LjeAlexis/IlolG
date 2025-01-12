@@ -1,10 +1,16 @@
 import discord
 from discord.ext import commands
-from features.leaderboard import add_player, remove_player, get_leaderboard, load_players, save_players
+from features.leaderboard.leaderboard import get_leaderboard
+from features.leaderboard.leaderboard_scheduler import *
 from ilolg.lol_api import get_player_puuid
-from features.leaderboard_scheduler import start_leaderboard_scheduler
+from features.manage_player.player_manager import PlayerManager
+from features.live_tracker.live_tracking_scheduler import start_live_tracker_scheduler
 import os
 from dotenv import load_dotenv
+
+
+
+player_manager = PlayerManager()
 
 # Charger les variables d'environnement
 load_dotenv()
@@ -21,8 +27,8 @@ if DISCORD_CHANNEL_ID == 0:
 
 # Initialisation du bot
 intents = discord.Intents.default()
+intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
-intents.message_content = True  # Activer l'accès au contenu des messages
 
 
 @bot.event
@@ -31,30 +37,33 @@ async def on_ready():
     channel = bot.get_channel(DISCORD_CHANNEL_ID)
     if channel:
         await channel.send("Salut tout le monde ! Le bot est en ligne et prêt à fonctionner. 🎉")
-    
+
+    # Démarrer le scheduler
     start_leaderboard_scheduler(bot, DISCORD_CHANNEL_ID)
+    start_live_tracker_scheduler(bot, DISCORD_CHANNEL_ID) 
+
 
 
 @bot.command(name="addplayer")
-async def add_player_command(ctx, riot_id: str, region: str = "EUW"):
+async def add_player_command(ctx, riot_id: str):
     """Commande pour ajouter un joueur au leaderboard."""
     try:
-        # Séparer le Riot ID en gameName et tagLine
+        # Vérifier le format Riot ID
         if "#" not in riot_id:
             await ctx.send("Le Riot ID doit être au format `gameName#tagLine` (ex: Alez#8201).")
             return
 
         game_name, tag_line = riot_id.split("#")
-        await ctx.send(f"Recherche du joueur {game_name}#{tag_line} dans la région {region}...")
+        await ctx.send(f"Recherche du joueur {game_name}#{tag_line} dans la région EUW...")
 
         # Récupérer le PUUID via l'API Riot
-        puuid = get_player_puuid(game_name, tag_line, region=region)
+        puuid = get_player_puuid(game_name, tag_line, region="EUW")
         if not puuid:
-            await ctx.send(f"Impossible de trouver le joueur {game_name}#{tag_line} dans la région {region}.")
+            await ctx.send(f"Impossible de trouver le joueur {game_name}#{tag_line} dans la région EUW.")
             return
 
-        # Ajouter le joueur au leaderboard
-        if add_player(f"{game_name}#{tag_line}", puuid, region):
+        # Ajouter le joueur via player_manager
+        if player_manager.add_player(f"{game_name}#{tag_line}", puuid):
             await ctx.send(f"Joueur {game_name}#{tag_line} ajouté avec succès.")
         else:
             await ctx.send(f"Le joueur {game_name}#{tag_line} est déjà dans la liste.")
@@ -66,12 +75,13 @@ async def add_player_command(ctx, riot_id: str, region: str = "EUW"):
 async def remove_player_command(ctx, summoner_name: str):
     """Commande pour supprimer un joueur du leaderboard."""
     try:
-        if remove_player(summoner_name):
+        if player_manager.remove_player(summoner_name):
             await ctx.send(f"Joueur {summoner_name} supprimé avec succès.")
         else:
             await ctx.send(f"Le joueur {summoner_name} n'existe pas dans la liste.")
     except Exception as e:
         await ctx.send(f"Erreur lors de la suppression : {e}")
+
 
 @bot.command(name="leaderboard")
 async def leaderboard_command(ctx):
@@ -94,15 +104,6 @@ async def leaderboard_command(ctx):
     except Exception as e:
         await ctx.send(f"Erreur lors de l'affichage du leaderboard : {e}")
 
-@bot.command(name="updateleaderboard")
-async def update_leaderboard_command(ctx):
-    """Commande pour forcer une mise à jour des données du leaderboard."""
-    try:
-        leaderboard = get_leaderboard()
-        save_players(leaderboard)
-        await ctx.send("Leaderboard mis à jour avec succès.")
-    except Exception as e:
-        await ctx.send(f"Erreur lors de la mise à jour : {e}")
 
 @bot.command(name="resetleaderboard")
 async def reset_leaderboard_command(ctx):
@@ -112,6 +113,7 @@ async def reset_leaderboard_command(ctx):
         await ctx.send("Leaderboard réinitialisé avec succès.")
     except Exception as e:
         await ctx.send(f"Erreur lors de la réinitialisation : {e}")
+
 
 @bot.command(name="listplayers")
 async def list_players_command(ctx):
@@ -124,11 +126,12 @@ async def list_players_command(ctx):
 
         message = "**Joueurs enregistrés :**\n"
         for player in players:
-            message += f"- {player['summoner_name']} ({player['region']})\n"
+            message += f"- {player['summoner_name']}\n"
 
         await ctx.send(message)
     except Exception as e:
         await ctx.send(f"Erreur lors de l'affichage des joueurs : {e}")
+
 
 # Lancer le bot
 bot.run(DISCORD_TOKEN)
