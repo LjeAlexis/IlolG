@@ -64,6 +64,9 @@ pip install .
 DISCORD_TOKEN=your_discord_bot_token
 RIOT_API_KEY=your_riot_api_key
 DISCORD_CHANNEL_ID=your_discord_channel_id
+DISCORD_SERV_ID=your_discord_serv_id
+#Var for the leaderboard scheduler, unite in minute 1440 = 1 day
+SCHEDULE_INTERVAL=1440
 ````
 5. **Run the bot:
 ````bash
