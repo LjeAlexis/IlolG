@@ -16,7 +16,7 @@ def start_live_tracker_scheduler(bot, channel_id):
     """
     scheduler = AsyncIOScheduler()
 
-    @scheduler.scheduled_job("interval", minutes=1)
+    @scheduler.scheduled_job("interval", minutes=5)
     async def track_live_games():
         players = player_manager.load_players()
         for player in players:

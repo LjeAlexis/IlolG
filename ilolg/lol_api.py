@@ -1,5 +1,5 @@
 import requests
-from config import RIOT_API_KEY
+from ilolg.config import RIOT_API_KEY
 
 BASE_URL = "https://europe.api.riotgames.com"
 

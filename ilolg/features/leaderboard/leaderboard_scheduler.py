@@ -1,7 +1,7 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from ilolg.features.leaderboard.leaderboard import get_leaderboard
 import discord
-from config import SCHEDULE_INTERVAL
+from ilolg.config import SCHEDULE_INTERVAL
 
 
 SCHEDULE_INTERVAL = int(SCHEDULE_INTERVAL)

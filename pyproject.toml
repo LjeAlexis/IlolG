@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "IlolG"
 version = "0.1.0"
-description = "Bot discord pour suivre les statistiques et le gain de LP sur League of Legends"
+description = "Discord Bot for Lol"
 authors = [
     { name = "LjeAlexis", email = "alexislajugiepro@gmail.com" }
 ]
@@ -18,8 +18,8 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://votre-repo.github.io"
-Source = "https://github.com/votre-repo"
+Homepage = "https://github.com/LjeAlexis"
+Source = "https://github.com/LjeAlexis/IlolG"
 
 [tool.setuptools.packages.find]
 where = ["."]
