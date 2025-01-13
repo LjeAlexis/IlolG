@@ -1,5 +1,5 @@
 import json
-from utils.rank_model import RankModel  
+from ilolg.utils.rank_model import RankModel  
 import time
 from ilolg.lol_api import get_player_rank_and_lp
 from ilolg.features.manage_player.player_manager import PlayerManager
