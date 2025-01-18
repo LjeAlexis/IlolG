@@ -34,8 +34,7 @@ def start_live_tracker_scheduler(bot, channel_id):
                 # Créer l'embed
                 embed = discord.Embed(
                     title=f"Match Results for {player['summoner_name']}",
-                    description="Here are the stats for their latest match:",
-                    color=color
+                    color=discord.Color.green() if stats["win"] else discord.Color.red()
                 )
                 embed.add_field(name="Champion", value=stats["champion"], inline=True)
                 embed.add_field(name="Result", value="Victory 🏆" if stats["win"] else "Defeat ❌", inline=True)
