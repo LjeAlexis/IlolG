@@ -1,6 +1,8 @@
 import requests
 from ilolg.config import RIOT_API_KEY
 
+#TODO:maybe handle exception
+
 BASE_URL = "https://europe.api.riotgames.com"
 
 REGION_MAP = {
