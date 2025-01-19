@@ -8,7 +8,6 @@ REGION_MAP = {
     "NA": "americas",
     "KR": "asia",
     "EUNE": "europe",
-    # Ajoutez d'autres régions si nécessaire
 }
 
 def get_player_puuid(gameName, tagLine, region="EUW"):
