@@ -1,16 +1,13 @@
 import discord
 from discord.ext import commands
-from ilolg.features.leaderboard.leaderboard import get_leaderboard
-from ilolg.features.leaderboard.leaderboard_scheduler import start_leaderboard_scheduler
-from ilolg.lol_api import get_player_puuid
+from ilolg.features.leaderboard.leaderboard_scheduler import LeaderboardScheduler
+from ilolg.features.leaderboard.discord_leaderboard import DiscordLeaderboard
 from ilolg.features.manage_player.player_manager import PlayerManager
+from ilolg.lol_api import get_player_puuid
 from ilolg.features.live_tracker.live_tracking_scheduler import start_live_tracker_scheduler
-import os
 from dotenv import load_dotenv
+import os
 
-player_manager = PlayerManager()
-
-# Charger les variables d'environnement
 load_dotenv()
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 DISCORD_CHANNEL_ID = int(os.getenv("DISCORD_CHANNEL_ID", 0))  # ID du canal Discord
@@ -20,6 +17,11 @@ intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+# Initialisation des gestionnaires
+player_manager = PlayerManager()
+leaderboard_scheduler = LeaderboardScheduler(bot, DISCORD_CHANNEL_ID, player_manager)
+discord_leaderboard = DiscordLeaderboard(bot, DISCORD_CHANNEL_ID, leaderboard_scheduler.leaderboard_manager)
+
 @bot.event
 async def on_ready():
     print(f"Bot connecté en tant que {bot.user}")
@@ -28,7 +30,7 @@ async def on_ready():
         await channel.send("Salut tout le monde ! Le bot est en ligne et prêt à fonctionner. 🎉")
 
     # Démarrer les schedulers
-    start_leaderboard_scheduler(bot, DISCORD_CHANNEL_ID)
+    leaderboard_scheduler.start_scheduler()
     start_live_tracker_scheduler(bot, DISCORD_CHANNEL_ID)
 
 @bot.command(name="addplayer")
@@ -69,18 +71,7 @@ async def remove_player_command(ctx, summoner_name: str):
 async def leaderboard_command(ctx):
     """Commande pour afficher le leaderboard avec les ranks et les LP."""
     try:
-        leaderboard = get_leaderboard()
-        if not leaderboard:
-            await ctx.send("Le leaderboard est vide pour l'instant.")
-            return
-
-        message = "\u2b50 **Leaderboard actuel** \u2b50\n"
-        for i, player in enumerate(leaderboard, start=1):
-            message += (
-                f"{i}. {player['summoner_name']} - {player['rank']} "
-                f"({player['lp']} LP, {player['wins']}W/{player['losses']}L)\n"
-            )
-        await ctx.send(message)
+        await discord_leaderboard.publish_leaderboard(force_update=False)
     except Exception as e:
         await ctx.send(f"Erreur lors de l'affichage du leaderboard : {e}")
 
@@ -93,10 +84,14 @@ async def list_players_command(ctx):
             await ctx.send("Aucun joueur enregistré.")
             return
 
-        message = "**Joueurs enregistrés :**\n"
+        embed = discord.Embed(
+            title="Liste des joueurs enregistrés",
+            color=discord.Color.green(),
+        )
         for player in players:
-            message += f"- {player['summoner_name']}\n"
-        await ctx.send(message)
+            embed.add_field(name=player["summoner_name"], value="\u200b", inline=False)
+
+        await ctx.send(embed=embed)
     except Exception as e:
         await ctx.send(f"Erreur lors de l'affichage des joueurs : {e}")
 

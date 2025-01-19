@@ -1,7 +1,7 @@
 import requests
 from ilolg.config import RIOT_API_KEY
 
-#TODO:maybe handle exception
+#TODO:maybe handle exception and fix logging of all data 
 
 BASE_URL = "https://europe.api.riotgames.com"
 
