@@ -1,6 +1,8 @@
 import requests
 from ilolg.config import RIOT_API_KEY
 
+#TODO:maybe handle exception
+
 BASE_URL = "https://europe.api.riotgames.com"
 
 REGION_MAP = {
@@ -8,7 +10,6 @@ REGION_MAP = {
     "NA": "americas",
     "KR": "asia",
     "EUNE": "europe",
-    # Ajoutez d'autres régions si nécessaire
 }
 
 def get_player_puuid(gameName, tagLine, region="EUW"):

@@ -1,10 +1,9 @@
 import json
-from ilolg.utils.rank_model import RankModel  
+from ilolg.features.leaderboard.rank_model import RankModel  
 import time
 from ilolg.lol_api import get_player_rank_and_lp
 from ilolg.features.manage_player.player_manager import PlayerManager
 
-#Fix that api call and save dep to leaderboard 
 player_manager = PlayerManager()
 
 def get_leaderboard(force_update=False):
