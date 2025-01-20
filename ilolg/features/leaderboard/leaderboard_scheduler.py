@@ -36,12 +36,13 @@ class LeaderboardScheduler:
             logger.error(f"Erreur lors de l'actualisation/publication du leaderboard : {e}")
 
     def start_scheduler(self):
-        """
-        Démarre le scheduler pour publier automatiquement le leaderboard à intervalles réguliers.
-        """
+        logger.info("Démarrage du scheduler pour le leaderboard avec un intervalle de %s minutes.", SCHEDULE_INTERVAL)
+
         @self.scheduler.scheduled_job("interval", minutes=SCHEDULE_INTERVAL)
         async def scheduled_task():
+            logger.info("Tâche planifiée exécutée : mise à jour et publication du leaderboard.")
             await self.update_and_publish_leaderboard()
 
         self.scheduler.start()
-        logger.info(f"Scheduler du leaderboard démarré avec un intervalle de {SCHEDULE_INTERVAL} minutes.")
+        logger.info("Scheduler démarré avec succès.")
+

@@ -7,7 +7,23 @@ from ilolg.lol_api import get_player_puuid
 from ilolg.features.live_tracker.live_tracking_scheduler import start_live_tracker_scheduler
 from dotenv import load_dotenv
 import os
+import logging
+import sys
+#TODO: Message explicite dans un premier temps, ensuite script pour gérer les log de manière centralisé
+# Configuration globale des logs
+logging.basicConfig(
+    level=logging.DEBUG,  # Changez à INFO si vous ne voulez pas trop de détails
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.StreamHandler(sys.stdout),  # Affiche les logs dans le terminal
+        logging.FileHandler("bot_logs.log", mode="a", encoding="utf-8")  # Sauvegarde les logs dans un fichier
+    ]
+)
 
+# Ajout d'un logger pour ce module
+logger = logging.getLogger(__name__)
+
+# Charger les variables d'environnement
 load_dotenv()
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 DISCORD_CHANNEL_ID = int(os.getenv("DISCORD_CHANNEL_ID", 0))  # ID du canal Discord
@@ -24,7 +40,7 @@ discord_leaderboard = DiscordLeaderboard(bot, DISCORD_CHANNEL_ID, leaderboard_sc
 
 @bot.event
 async def on_ready():
-    print(f"Bot connecté en tant que {bot.user}")
+    logger.info("Bot connecté en tant que %s", bot.user)
     channel = bot.get_channel(DISCORD_CHANNEL_ID)
     if channel:
         await channel.send("Salut tout le monde ! Le bot est en ligne et prêt à fonctionner. 🎉")
@@ -54,6 +70,7 @@ async def add_player_command(ctx, riot_id: str):
         else:
             await ctx.send(f"Le joueur {game_name}#{tag_line} est déjà dans la liste.")
     except Exception as e:
+        logger.error("Erreur lors de l'ajout d'un joueur : %s", e)
         await ctx.send(f"Erreur lors de l'ajout : {e}")
 
 @bot.command(name="removeplayer")
@@ -65,15 +82,17 @@ async def remove_player_command(ctx, summoner_name: str):
         else:
             await ctx.send(f"Le joueur {summoner_name} n'existe pas dans la liste.")
     except Exception as e:
+        logger.error("Erreur lors de la suppression d'un joueur : %s", e)
         await ctx.send(f"Erreur lors de la suppression : {e}")
 
 @bot.command(name="leaderboard")
 async def leaderboard_command(ctx):
-    """Commande pour afficher le leaderboard avec les ranks et les LP."""
+    logger.info("Commande !leaderboard exécutée par %s dans le canal %s", ctx.author, ctx.channel)
     try:
         await discord_leaderboard.publish_leaderboard(force_update=False)
     except Exception as e:
-        await ctx.send(f"Erreur lors de l'affichage du leaderboard : {e}")
+        logger.error("Erreur lors de l'exécution de !leaderboard : %s", e)
+        await ctx.send(f"Erreur : {e}")
 
 @bot.command(name="listplayers")
 async def list_players_command(ctx):
@@ -93,13 +112,20 @@ async def list_players_command(ctx):
 
         await ctx.send(embed=embed)
     except Exception as e:
+        logger.error("Erreur lors de l'affichage des joueurs : %s", e)
         await ctx.send(f"Erreur lors de l'affichage des joueurs : {e}")
+
 
 def main():
     if not DISCORD_TOKEN:
-        print("Erreur : DISCORD_TOKEN non trouvé.")
+        logger.error("Erreur : DISCORD_TOKEN non trouvé.")
         return
     if DISCORD_CHANNEL_ID == 0:
-        print("Erreur : DISCORD_CHANNEL_ID non trouvé.")
+        logger.error("Erreur : DISCORD_CHANNEL_ID non trouvé.")
         return
+
+    logger.info("Démarrage du bot...")
     bot.run(DISCORD_TOKEN)
+
+if __name__ == "__main__":
+    main()

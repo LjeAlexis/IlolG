@@ -21,31 +21,29 @@ class DiscordLeaderboard:
         self.channel_id = channel_id
         self.leaderboard = leaderboard
 
-    async def publish_leaderboard(self, force_update: bool = False):
-        """
-        Récupère le leaderboard et le publie dans le canal Discord.
+async def publish_leaderboard(self, force_update: bool = False):
+    logger.info("Appel de publish_leaderboard avec force_update=%s", force_update)
+    channel = self.bot.get_channel(self.channel_id)
+    if not channel:
+        logger.error("Canal non trouvé pour l'ID %s", self.channel_id)
+        return
 
-        Args:
-            force_update (bool): Si True, force la mise à jour des données avant la publication.
-        """
-        channel = self.bot.get_channel(self.channel_id)
-        if not channel:
-            logger.error(f"Erreur : Impossible de trouver le canal Discord avec l'ID {self.channel_id}.")
-            return
+    try:
+        logger.debug("Récupération des données du leaderboard...")
+        leaderboard_data = self.leaderboard.get_leaderboard(force_update=force_update)
 
-        try:
-            leaderboard_data = self.leaderboard.get_leaderboard(force_update=force_update)
+        if not leaderboard_data:
+            logger.debug("Leaderboard vide, création d'un embed par défaut.")
+            embed = self._create_empty_leaderboard_embed()
+        else:
+            logger.debug("Création d'un embed avec les données récupérées.")
+            embed = self._create_leaderboard_embed(leaderboard_data)
 
-            # Générer le message embed du leaderboard
-            if not leaderboard_data:
-                embed = self._create_empty_leaderboard_embed()
-            else:
-                embed = self._create_leaderboard_embed(leaderboard_data)
+        await channel.send(embed=embed)
+        logger.info("Leaderboard publié avec succès dans le canal %s", self.channel_id)
+    except Exception as e:
+        logger.error("Erreur lors de la publication du leaderboard : %s", e)
 
-            await channel.send(embed=embed)
-            logger.info(f"Leaderboard publié dans le canal {self.channel_id}.")
-        except Exception as e:
-            logger.error(f"Erreur lors de la publication du leaderboard : {e}")
 
     @staticmethod
     def _create_empty_leaderboard_embed() -> discord.Embed:
