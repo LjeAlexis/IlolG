@@ -9,6 +9,9 @@ from dotenv import load_dotenv
 import os
 import logging
 import sys
+import uuid
+
+
 #TODO: Message explicite dans un premier temps, ensuite script pour gérer les log de manière centralisé
 # Configuration globale des logs
 logging.basicConfig(
@@ -42,6 +45,7 @@ discord_leaderboard = DiscordLeaderboard(bot, DISCORD_CHANNEL_ID, leaderboard_sc
 async def on_ready():
     logger.info("Bot connecté en tant que %s", bot.user)
     channel = bot.get_channel(DISCORD_CHANNEL_ID)
+
     if channel:
         await channel.send("Salut tout le monde ! Le bot est en ligne et prêt à fonctionner. 🎉")
 
@@ -87,12 +91,14 @@ async def remove_player_command(ctx, summoner_name: str):
 
 @bot.command(name="leaderboard")
 async def leaderboard_command(ctx):
-    logger.info("Commande !leaderboard exécutée par %s dans le canal %s", ctx.author, ctx.channel)
+    request_id = uuid.uuid4()  # Génère un identifiant unique
+    logger.info(f"[{request_id}] Commande !leaderboard exécutée par {ctx.author} dans {ctx.channel}, publication en cours.")
     try:
         await discord_leaderboard.publish_leaderboard(force_update=False)
     except Exception as e:
-        logger.error("Erreur lors de l'exécution de !leaderboard : %s", e)
+        logger.error(f"[{request_id}] Erreur lors de l'exécution de !leaderboard : {e}")
         await ctx.send(f"Erreur : {e}")
+
 
 @bot.command(name="listplayers")
 async def list_players_command(ctx):

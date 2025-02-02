@@ -7,42 +7,33 @@ logger.setLevel(logging.INFO)
 
 
 class DiscordLeaderboard:
-    #TODO: see discord.ext.commands 
     def __init__(self, bot: discord.ext.commands.Bot, channel_id: int, leaderboard: LeaderboardManager):
-        """
-        Initialise la classe pour gérer la publication du leaderboard sur Discord.
-
-        Args:
-            bot (discord.ext.commands.Bot): Instance du bot Discord.
-            channel_id (int): ID du canal Discord où publier le leaderboard.
-            leaderboard (Leaderboard): Instance de la classe Leaderboard pour récupérer les données.
-        """
         self.bot = bot
         self.channel_id = channel_id
         self.leaderboard = leaderboard
 
-async def publish_leaderboard(self, force_update: bool = False):
-    logger.info("Appel de publish_leaderboard avec force_update=%s", force_update)
-    channel = self.bot.get_channel(self.channel_id)
-    if not channel:
-        logger.error("Canal non trouvé pour l'ID %s", self.channel_id)
-        return
+    async def publish_leaderboard(self, force_update: bool = False):
 
-    try:
-        logger.debug("Récupération des données du leaderboard...")
-        leaderboard_data = self.leaderboard.get_leaderboard(force_update=force_update)
+        channel = self.bot.get_channel(self.channel_id)
+        if not channel:
+            logger.error("Canal non trouvé pour l'ID %s", self.channel_id)
+            return
 
-        if not leaderboard_data:
-            logger.debug("Leaderboard vide, création d'un embed par défaut.")
-            embed = self._create_empty_leaderboard_embed()
-        else:
-            logger.debug("Création d'un embed avec les données récupérées.")
-            embed = self._create_leaderboard_embed(leaderboard_data)
+        try:
+            logger.debug("Récupération des données du leaderboard...")
+            leaderboard_data = self.leaderboard.get_leaderboard(force_update=force_update)
 
-        await channel.send(embed=embed)
-        logger.info("Leaderboard publié avec succès dans le canal %s", self.channel_id)
-    except Exception as e:
-        logger.error("Erreur lors de la publication du leaderboard : %s", e)
+            if not leaderboard_data:
+                logger.debug("Leaderboard vide, création d'un embed par défaut.")
+                embed = self._create_empty_leaderboard_embed()
+            else:
+                logger.debug("Création d'un embed avec les données récupérées.")
+                embed = self._create_leaderboard_embed(leaderboard_data)
+
+            await channel.send(embed=embed)
+            logger.info("Leaderboard publié avec succès dans le canal %s", self.channel_id)
+        except Exception as e:
+            logger.error("Erreur lors de la publication du leaderboard : %s", e)
 
 
     @staticmethod

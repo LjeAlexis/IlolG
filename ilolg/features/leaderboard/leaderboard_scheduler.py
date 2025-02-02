@@ -20,6 +20,7 @@ class LeaderboardScheduler:
             channel_id (int): ID du canal Discord où publier le leaderboard.
             player_manager: Instance de gestion des joueurs.
         """
+        logger.info("🚀 Nouvelle instance de LeaderboardScheduler créée !")
         self.bot = bot
         self.channel_id = channel_id
         self.leaderboard_manager = LeaderboardManager(player_manager)
@@ -27,21 +28,24 @@ class LeaderboardScheduler:
         self.scheduler = AsyncIOScheduler()
 
     async def update_and_publish_leaderboard(self):
-        """
-        Actualise les données des joueurs et publie le leaderboard sous forme d'embed Discord.
-        """
+        logger.info("Mise à jour et publication du leaderboard déclenchée par le scheduler.")
         try:
             await self.discord_leaderboard.publish_leaderboard(force_update=True)
         except Exception as e:
             logger.error(f"Erreur lors de l'actualisation/publication du leaderboard : {e}")
 
+
     def start_scheduler(self):
+        """
+        Démarre le scheduler pour exécuter la mise à jour et publication du leaderboard à intervalle régulier.
+        """
         logger.info("Démarrage du scheduler pour le leaderboard avec un intervalle de %s minutes.", SCHEDULE_INTERVAL)
 
-        @self.scheduler.scheduled_job("interval", minutes=SCHEDULE_INTERVAL)
-        async def scheduled_task():
-            logger.info("Tâche planifiée exécutée : mise à jour et publication du leaderboard.")
-            await self.update_and_publish_leaderboard()
+        if self.scheduler.running:
+            logger.warning("Le scheduler est déjà en cours d'exécution, arrêt de la procédure de démarrage.")
+            return
+
+        self.scheduler.add_job(self.update_and_publish_leaderboard, "interval", minutes=SCHEDULE_INTERVAL, next_run_time=None)
 
         self.scheduler.start()
         logger.info("Scheduler démarré avec succès.")
