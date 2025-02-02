@@ -26,7 +26,6 @@ def get_latest_patch_version() -> str:
         logger.error(f"Erreur lors de la récupération des versions : {e}")
         return "13.24.1"  # Valeur par défaut si l'API échoue
 
-
 class DiscordMatchMessage(BaseModel):
     summoner_name: str
     champion: str
@@ -37,6 +36,9 @@ class DiscordMatchMessage(BaseModel):
     game_mode: str
     win: bool
     match_id: str
+    damage_dealt: int
+    vision_score: int
+    ranked: bool
     patch_version: str = get_latest_patch_version()
 
     def get_champion_icon_url(self) -> str:
@@ -59,16 +61,22 @@ class DiscordMatchMessage(BaseModel):
         # Déterminer la couleur en fonction du résultat
         color = discord.Color.green() if self.win else discord.Color.red()
 
+        # Définir le type de file (Ranked / Normal)
+        queue_type = "Ranked" if self.ranked else "Normal"
+
         # Créer l'embed
         embed = discord.Embed(
             title=f"Match Results for {self.summoner_name}",
             color=color
         )
         embed.add_field(name="Game mode", value=self.game_mode, inline=True)
+        embed.add_field(name="Queue Type", value=queue_type, inline=True)
         embed.add_field(name="Champion", value=self.champion, inline=True)
         embed.add_field(name="Role", value=self.role, inline=True)
         embed.add_field(name="Result", value="Victory 🏆" if self.win else "Defeat ❌", inline=True)
         embed.add_field(name="K/D/A", value=f"{self.kills}/{self.deaths}/{self.assists}", inline=True)
+        embed.add_field(name="Damage Dealt", value=str(self.damage_dealt), inline=True)
+        embed.add_field(name="Vision Score", value=str(self.vision_score), inline=True)
         embed.set_thumbnail(url=self.get_champion_icon_url())  # Ajouter l'icône du champion
         embed.set_footer(text="Tracked by IlolG Bot <3")
         return embed
@@ -78,8 +86,10 @@ class DiscordMatchMessage(BaseModel):
         Log les informations du match pour le suivi.
         """
         result = "Victory 🏆" if self.win else "Defeat ❌"
+        queue_type = "Ranked" if self.ranked else "Normal"
         logger.info(
             f"[MATCH RESULT] Summoner: {self.summoner_name}, Champion: {self.champion}, "
-            f"Game Mode: {self.game_mode}, Role: {self.role}, "
-            f"K/D/A: {self.kills}/{self.deaths}/{self.assists}, Result: {result}, Match ID: {self.match_id}"
+            f"Game Mode: {self.game_mode}, Queue: {queue_type}, Role: {self.role}, "
+            f"K/D/A: {self.kills}/{self.deaths}/{self.assists}, Damage Dealt: {self.damage_dealt}, "
+            f"Vision Score: {self.vision_score}, Result: {result}, Match ID: {self.match_id}"
         )

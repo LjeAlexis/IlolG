@@ -1,14 +1,28 @@
 import discord
 from discord.ext import commands
-from ilolg.features.leaderboard.leaderboard import get_leaderboard
-from ilolg.features.leaderboard.leaderboard_scheduler import start_leaderboard_scheduler
-from ilolg.lol_api import get_player_puuid
+from ilolg.features.leaderboard.leaderboard_scheduler import LeaderboardScheduler
+from ilolg.features.leaderboard.discord_leaderboard import DiscordLeaderboard
 from ilolg.features.manage_player.player_manager import PlayerManager
+from ilolg.lol_api import get_player_puuid
 from ilolg.features.live_tracker.live_tracking_scheduler import start_live_tracker_scheduler
-import os
 from dotenv import load_dotenv
+import os
+import logging
+import sys
+import uuid
 
-player_manager = PlayerManager()
+
+#TODO: Message explicite dans un premier temps, ensuite gérer les log de manière centralisé
+# Configuration globale des logs
+logging.basicConfig(
+    level=logging.DEBUG,  # Changez à INFO si vous ne voulez pas trop de détails
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.StreamHandler(sys.stdout),  
+    ]
+)
+
+logger = logging.getLogger(__name__)
 
 # Charger les variables d'environnement
 load_dotenv()
@@ -20,15 +34,21 @@ intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+# Initialisation des gestionnaires
+player_manager = PlayerManager()
+leaderboard_scheduler = LeaderboardScheduler(bot, DISCORD_CHANNEL_ID, player_manager)
+discord_leaderboard = DiscordLeaderboard(bot, DISCORD_CHANNEL_ID, leaderboard_scheduler.leaderboard_manager)
+
 @bot.event
 async def on_ready():
-    print(f"Bot connecté en tant que {bot.user}")
+    logger.info("Bot connecté en tant que %s", bot.user)
     channel = bot.get_channel(DISCORD_CHANNEL_ID)
+
     if channel:
         await channel.send("Salut tout le monde ! Le bot est en ligne et prêt à fonctionner. 🎉")
 
     # Démarrer les schedulers
-    start_leaderboard_scheduler(bot, DISCORD_CHANNEL_ID)
+    leaderboard_scheduler.start_scheduler()
     start_live_tracker_scheduler(bot, DISCORD_CHANNEL_ID)
 
 @bot.command(name="addplayer")
@@ -52,6 +72,7 @@ async def add_player_command(ctx, riot_id: str):
         else:
             await ctx.send(f"Le joueur {game_name}#{tag_line} est déjà dans la liste.")
     except Exception as e:
+        logger.error("Erreur lors de l'ajout d'un joueur : %s", e)
         await ctx.send(f"Erreur lors de l'ajout : {e}")
 
 @bot.command(name="removeplayer")
@@ -63,26 +84,19 @@ async def remove_player_command(ctx, summoner_name: str):
         else:
             await ctx.send(f"Le joueur {summoner_name} n'existe pas dans la liste.")
     except Exception as e:
+        logger.error("Erreur lors de la suppression d'un joueur : %s", e)
         await ctx.send(f"Erreur lors de la suppression : {e}")
 
 @bot.command(name="leaderboard")
 async def leaderboard_command(ctx):
-    """Commande pour afficher le leaderboard avec les ranks et les LP."""
+    request_id = uuid.uuid4()  # Génère un identifiant unique
+    logger.info(f"[{request_id}] Commande !leaderboard exécutée par {ctx.author} dans {ctx.channel}, publication en cours.")
     try:
-        leaderboard = get_leaderboard()
-        if not leaderboard:
-            await ctx.send("Le leaderboard est vide pour l'instant.")
-            return
-
-        message = "\u2b50 **Leaderboard actuel** \u2b50\n"
-        for i, player in enumerate(leaderboard, start=1):
-            message += (
-                f"{i}. {player['summoner_name']} - {player['rank']} "
-                f"({player['lp']} LP, {player['wins']}W/{player['losses']}L)\n"
-            )
-        await ctx.send(message)
+        await discord_leaderboard.publish_leaderboard(force_update=False)
     except Exception as e:
-        await ctx.send(f"Erreur lors de l'affichage du leaderboard : {e}")
+        logger.error(f"[{request_id}] Erreur lors de l'exécution de !leaderboard : {e}")
+        await ctx.send(f"Erreur : {e}")
+
 
 @bot.command(name="listplayers")
 async def list_players_command(ctx):
@@ -93,18 +107,29 @@ async def list_players_command(ctx):
             await ctx.send("Aucun joueur enregistré.")
             return
 
-        message = "**Joueurs enregistrés :**\n"
+        embed = discord.Embed(
+            title="Liste des joueurs enregistrés",
+            color=discord.Color.green(),
+        )
         for player in players:
-            message += f"- {player['summoner_name']}\n"
-        await ctx.send(message)
+            embed.add_field(name=player["summoner_name"], value="\u200b", inline=False)
+
+        await ctx.send(embed=embed)
     except Exception as e:
+        logger.error("Erreur lors de l'affichage des joueurs : %s", e)
         await ctx.send(f"Erreur lors de l'affichage des joueurs : {e}")
+
 
 def main():
     if not DISCORD_TOKEN:
-        print("Erreur : DISCORD_TOKEN non trouvé.")
+        logger.error("Erreur : DISCORD_TOKEN non trouvé.")
         return
     if DISCORD_CHANNEL_ID == 0:
-        print("Erreur : DISCORD_CHANNEL_ID non trouvé.")
+        logger.error("Erreur : DISCORD_CHANNEL_ID non trouvé.")
         return
+
+    logger.info("Démarrage du bot...")
     bot.run(DISCORD_TOKEN)
+
+if __name__ == "__main__":
+    main()

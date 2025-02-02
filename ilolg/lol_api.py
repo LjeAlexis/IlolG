@@ -1,7 +1,7 @@
 import requests
 from ilolg.config import RIOT_API_KEY
 
-#TODO:maybe handle exception
+#TODO:maybe handle exception and fix logging of all data 
 
 BASE_URL = "https://europe.api.riotgames.com"
 
@@ -117,7 +117,7 @@ def get_match_ids(puuid, start=0, count=1):
         headers = {"X-Riot-Token": RIOT_API_KEY}
         response = requests.get(url, headers=headers)
         response.raise_for_status()
-        return response.json()  # Retourne une liste de match_ids
+        return response.json()  
     except requests.RequestException as e:
         print(f"Erreur lors de la récupération des IDs des matchs : {e}")
         return []
