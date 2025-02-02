@@ -12,18 +12,16 @@ import sys
 import uuid
 
 
-#TODO: Message explicite dans un premier temps, ensuite script pour gérer les log de manière centralisé
+#TODO: Message explicite dans un premier temps, ensuite gérer les log de manière centralisé
 # Configuration globale des logs
 logging.basicConfig(
     level=logging.DEBUG,  # Changez à INFO si vous ne voulez pas trop de détails
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     handlers=[
-        logging.StreamHandler(sys.stdout),  # Affiche les logs dans le terminal
-        logging.FileHandler("bot_logs.log", mode="a", encoding="utf-8")  # Sauvegarde les logs dans un fichier
+        logging.StreamHandler(sys.stdout),  
     ]
 )
 
-# Ajout d'un logger pour ce module
 logger = logging.getLogger(__name__)
 
 # Charger les variables d'environnement

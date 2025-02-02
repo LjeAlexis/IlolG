@@ -2,7 +2,6 @@ from typing import Optional, Dict, Any
 from ilolg.lol_api import get_match_ids, get_match_details
 from ilolg.features.live_tracker.stats_model import MatchStats
 
-
 def get_last_match_stats(player: Dict[str, Any]) -> Optional[MatchStats]:
     """
     Récupère les statistiques du dernier match d'un joueur.
@@ -34,9 +33,16 @@ def get_last_match_stats(player: Dict[str, Any]) -> Optional[MatchStats]:
         return None
 
     participants: list[Dict[str, Any]] = match_details.get("info", {}).get("participants", [])
+    queue_id: int = match_details.get("info", {}).get("queueId", 0)
+
+    # Déterminer si la partie est classée (Ranked)
+    ranked_queues = {420, 440}  # 420 = Ranked Solo/Duo, 440 = Ranked Flex
+    is_ranked: bool = queue_id in ranked_queues
+
     for participant in participants:
         if participant["puuid"] == player["puuid"]:
-            print(f"Statistiques trouvées pour {player['summoner_name']}: {participant}")
+            print(f"Statistiques trouvées pour {player['summoner_name']} : {participant}")
+
             return MatchStats(
                 match_id=match_id,
                 champion=participant["championName"],
@@ -45,7 +51,10 @@ def get_last_match_stats(player: Dict[str, Any]) -> Optional[MatchStats]:
                 assists=participant["assists"],
                 role=participant.get("individualPosition", "UNKNOWN"),
                 game_mode=match_details.get("info", {}).get("gameMode", "UNKNOWN"),
-                win=participant["win"]
+                win=participant["win"],
+                damage_dealt=participant.get("totalDamageDealtToChampions", 0),
+                vision_score=participant.get("visionScore", 0),
+                ranked=is_ranked
             )
 
     print(f"Pas de statistiques pour {player['summoner_name']} dans le match {match_id}")
