@@ -1,0 +1,2 @@
+[console_scripts]
+lol-discord-bot = ilolg.bot:main

@@ -1,5 +1,5 @@
 import requests
-from ilolg.config import RIOT_API_KEY
+from IlolG.config import RIOT_API_KEY
 
 #TODO:maybe handle exception and fix logging of all data 
 

@@ -1,6 +1,6 @@
 import discord
 import logging
-from ilolg.features.leaderboard.leaderboard import LeaderboardManager
+from lol.features.leaderboard.leaderboard import LeaderboardManager
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

@@ -1,16 +1,15 @@
 import discord
 from discord.ext import commands
-from ilolg.features.leaderboard.leaderboard_scheduler import LeaderboardScheduler
-from ilolg.features.leaderboard.discord_leaderboard import DiscordLeaderboard
-from ilolg.features.manage_player.player_manager import PlayerManager
-from ilolg.lol_api import get_player_puuid
-from ilolg.features.live_tracker.live_tracking_scheduler import start_live_tracker_scheduler
+from ilolg.lol.features.leaderboard.leaderboard_scheduler import LeaderboardScheduler
+from ilolg.lol.features.leaderboard.discord_leaderboard import DiscordLeaderboard
+from ilolg.lol.features.manage_player.player_manager import PlayerManager
+from ilolg.lol.lol_api import get_player_puuid
+from ilolg.lol.features.live_tracker.live_tracking_scheduler import start_live_tracker_scheduler
 from dotenv import load_dotenv
 import os
 import logging
 import sys
 import uuid
-
 
 #TODO: Message explicite dans un premier temps, ensuite gérer les log de manière centralisé
 # Configuration globale des logs

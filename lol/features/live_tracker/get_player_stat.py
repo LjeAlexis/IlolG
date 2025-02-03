@@ -1,6 +1,6 @@
 from typing import Optional, Dict, Any
-from ilolg.lol_api import get_match_ids, get_match_details
-from ilolg.features.live_tracker.stats_model import MatchStats
+from ilolg.lol.lol_api import get_match_ids, get_match_details
+from ilolg.lol.features.live_tracker.stats_model import MatchStats
 
 def get_last_match_stats(player: Dict[str, Any]) -> Optional[MatchStats]:
     """

@@ -1,8 +1,8 @@
 import time
 import logging
-from ilolg.features.leaderboard.rank_model import RankModel
-from ilolg.lol_api import get_player_rank_and_lp
-from ilolg.features.manage_player.player_manager import PlayerManager
+from ilolg.lol.features.leaderboard.rank_model import RankModel
+from ilolg.lol.lol_api import get_player_rank_and_lp
+from ilolg.lol.features.manage_player.player_manager import PlayerManager
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

@@ -1,7 +1,7 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from ilolg.features.live_tracker.get_player_stat import get_last_match_stats
-from ilolg.features.manage_player.player_manager import PlayerManager
-from ilolg.features.live_tracker.discord_message_model import DiscordMatchMessage
+from lol.features.live_tracker.get_player_stat import get_last_match_stats
+from lol.features.manage_player.player_manager import PlayerManager
+from lol.features.live_tracker.discord_message_model import DiscordMatchMessage
 from discord.ext.commands import Bot
 
 import logging

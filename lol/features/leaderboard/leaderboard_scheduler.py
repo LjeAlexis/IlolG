@@ -1,7 +1,7 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from ilolg.features.leaderboard.leaderboard import LeaderboardManager
-from ilolg.features.leaderboard.discord_leaderboard import DiscordLeaderboard
-from ilolg.config import SCHEDULE_INTERVAL
+from ilolg.lol.features.leaderboard.leaderboard import LeaderboardManager
+from ilolg.lol.features.leaderboard.discord_leaderboard import DiscordLeaderboard
+from config import SCHEDULE_INTERVAL
 import discord
 import logging
 
