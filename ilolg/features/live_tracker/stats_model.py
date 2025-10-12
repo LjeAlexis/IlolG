@@ -13,6 +13,8 @@ class MatchStats(BaseModel):
     damage_dealt: int
     vision_score: int
     ranked: bool
+    duration_seconds: int | None = None
+    queue_name: str | None = None
 
     def summary(self) -> str:
         """

@@ -15,7 +15,7 @@ import uuid
 #TODO: Message explicite dans un premier temps, ensuite gérer les log de manière centralisé
 # Configuration globale des logs
 logging.basicConfig(
-    level=logging.DEBUG,  # Changez à INFO si vous ne voulez pas trop de détails
+    level=logging.INFO, 
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     handlers=[
         logging.StreamHandler(sys.stdout),  

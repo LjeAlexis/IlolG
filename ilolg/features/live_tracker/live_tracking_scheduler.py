@@ -47,7 +47,9 @@ def start_live_tracker_scheduler(bot: Bot, channel_id: int):
                         match_id=stats.match_id,
                         damage_dealt=stats.damage_dealt,
                         vision_score=stats.vision_score,
-                        ranked=stats.ranked
+                        ranked=stats.ranked,
+                        duration_seconds=stats.duration_seconds,
+                        queue_name=stats.queue_name
                     )
 
                     # Log du match

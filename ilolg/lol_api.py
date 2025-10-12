@@ -1,143 +1,102 @@
 import requests
+import json
+from urllib.parse import quote
 from ilolg.config import RIOT_API_KEY
 
-#TODO:maybe handle exception and fix logging of all data 
-
-BASE_URL = "https://europe.api.riotgames.com"
-
+# --- mapping régions
 REGION_MAP = {
     "EUW": "europe",
+    "EUNE": "europe",
     "NA": "americas",
     "KR": "asia",
-    "EUNE": "europe",
 }
 
+def _continent_base(region: str) -> str:
+    return f"https://{REGION_MAP.get(region, 'europe')}.api.riotgames.com"
+
+def _platform_base(region: str) -> str:
+    # EUW -> euw1, NA -> na1, KR -> kr1
+    return f"https://{region.lower()}1.api.riotgames.com"
+
 def get_player_puuid(gameName, tagLine, region="EUW"):
-    """Récupère le PUUID d'un joueur via l'API Riot avec son Riot ID (gameName + tagLine).
-
-    Args:
-        gameName (str): Nom du joueur.
-        tagLine (str): TagLine du joueur.
-        region (str): Région du joueur (par défaut: EUW).
-
-    Returns:
-        str: PUUID du joueur ou None en cas d'erreur.
-    """
     try:
-        region_base_url = f"https://{REGION_MAP.get(region, 'europe')}.api.riotgames.com"
-        url = f"{region_base_url}/riot/account/v1/accounts/by-riot-id/{gameName}/{tagLine}"
+        url = f"{_continent_base(region)}/riot/account/v1/accounts/by-riot-id/{quote(gameName)}/{quote(tagLine)}"
         headers = {"X-Riot-Token": RIOT_API_KEY}
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
-        print(response)
-        data = response.json()
-        print(data)
-        return data.get("puuid")
+        resp = requests.get(url, headers=headers, timeout=10)
+        if resp.status_code == 429:
+            raise RuntimeError("Riot API rate limit (429). Réessaie dans quelques secondes.")
+        resp.raise_for_status()
+        data = resp.json()
+        puuid = data.get("puuid")
+        if not puuid:
+            raise RuntimeError(f"PUUID introuvable pour {gameName}#{tagLine} (réponse: {data})")
+        return puuid
+    except requests.HTTPError as e:
+        raise RuntimeError(f"Riot API error {e.response.status_code}: {e.response.text[:200]}") from e
+    except json.JSONDecodeError:
+        raise RuntimeError(f"Réponse non-JSON de Riot : {resp.text[:200]}")
     except requests.RequestException as e:
-        print(f"Erreur lors de la récupération du PUUID : {e}")
-        return None
+        raise RuntimeError(f"Erreur réseau Riot API: {e}") from e
 
 def get_summoner_id_from_puuid(puuid, region="EUW"):
-    """Récupère le summonerId d'un joueur via son PUUID.
-
-    Args:
-        puuid (str): PUUID du joueur.
-        region (str): Région du joueur (par défaut: EUW).
-
-    Returns:
-        str: summonerId du joueur ou None en cas d'erreur.
-    """
     try:
-        region_specific_base_url = f"https://{region.lower()}1.api.riotgames.com"
-        url = f"{region_specific_base_url}/lol/summoner/v4/summoners/by-puuid/{puuid}"
+        url = f"{_platform_base(region)}/lol/summoner/v4/summoners/by-puuid/{puuid}"
         headers = {"X-Riot-Token": RIOT_API_KEY}
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
-        data = response.json()
-        return data.get("id")
+        resp = requests.get(url, headers=headers, timeout=10)
+        if resp.status_code == 429:
+            raise RuntimeError("Riot API rate limit (429) sur summoner.")
+        resp.raise_for_status()
+        return resp.json().get("id")
     except requests.RequestException as e:
-        print(f"Erreur lors de la récupération du summonerId : {e}")
-        return None
+        raise RuntimeError(f"Erreur lors de la récupération du summonerId : {e}") from e
 
 def get_player_rank_and_lp(puuid, region="EUW"):
-    """Récupère les rangs et LP d'un joueur via son summonerId.
-
-    Args:
-        puuid (str): PUUID du joueur.
-        region (str): Région du joueur (par défaut: EUW).
-
-    Returns:
-        dict: Détails des stats classées (rang, LP, victoires, défaites).
-    """
     try:
-        # Étape 1 : Récupérer le summonerId via le puuid
         summoner_id = get_summoner_id_from_puuid(puuid, region=region)
         if not summoner_id:
-            raise ValueError("summonerId introuvable pour le PUUID donné.")
-
-        # Étape 2 : Récupérer les stats classées via le summonerId
-        region_specific_base_url = f"https://{region.lower()}1.api.riotgames.com"
-        url = f"{region_specific_base_url}/lol/league/v4/entries/by-summoner/{summoner_id}"
+            return {"rank": "Unranked", "lp": 0, "wins": 0, "losses": 0}
+        url = f"{_platform_base(region)}/lol/league/v4/entries/by-summoner/{summoner_id}"
         headers = {"X-Riot-Token": RIOT_API_KEY}
-        
-        print(f"Appel API pour les stats classées : {url}")
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
-        data = response.json()
-        print(f"Données de stats classées : {data}")
-
-        # Filtrer les données pour RANKED_SOLO_5x5
-        solo_duo = next((entry for entry in data if entry["queueType"] == "RANKED_SOLO_5x5"), None)
-        if solo_duo:
+        resp = requests.get(url, headers=headers, timeout=10)
+        if resp.status_code == 429:
+            return {"rank": "RateLimited", "lp": 0, "wins": 0, "losses": 0}
+        resp.raise_for_status()
+        entries = resp.json()
+        solo = next((e for e in entries if e.get("queueType") == "RANKED_SOLO_5x5"), None)
+        if solo:
             return {
-                "rank": f"{solo_duo['tier']} {solo_duo['rank']}",
-                "lp": solo_duo["leaguePoints"],
-                "wins": solo_duo["wins"],
-                "losses": solo_duo["losses"]
+                "rank": f"{solo.get('tier','')} {solo.get('rank','')}".strip() or "Unranked",
+                "lp": solo.get("leaguePoints", 0),
+                "wins": solo.get("wins", 0),
+                "losses": solo.get("losses", 0),
             }
         return {"rank": "Unranked", "lp": 0, "wins": 0, "losses": 0}
-    except requests.RequestException as e:
-        print(f"Erreur lors de la récupération des stats : {e}")
-        return {'rank": "N/A", "lp": 0, "wins": 0, "losses": 0'}
+    except requests.RequestException:
+        return {"rank": "N/A", "lp": 0, "wins": 0, "losses": 0}
 
-def get_match_ids(puuid, start=0, count=1):
-    """
-    Récupère les IDs des matchs d'un joueur.
-
-    Args:
-        puuid (str): PUUID du joueur.
-        start (int): Index de départ pour récupérer les matchs.
-        count (int): Nombre de matchs à récupérer.
-
-    Returns:
-        list: Liste des IDs des matchs.
-    """
+def get_match_ids(puuid, start=0, count=1, region="EUW"):
     try:
-        url = f"{BASE_URL}/lol/match/v5/matches/by-puuid/{puuid}/ids?start={start}&count={count}"
+        url = f"{_continent_base(region)}/lol/match/v5/matches/by-puuid/{puuid}/ids?start={start}&count={count}"
         headers = {"X-Riot-Token": RIOT_API_KEY}
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
-        return response.json()  
+        resp = requests.get(url, headers=headers, timeout=10)
+        if resp.status_code == 429:
+            # renvoie une liste vide pour éviter le spam ; ton scheduler réessaiera plus tard
+            return []
+        resp.raise_for_status()
+        return resp.json()
     except requests.RequestException as e:
         print(f"Erreur lors de la récupération des IDs des matchs : {e}")
         return []
 
-def get_match_details(match_id):
-    """
-    Récupère les détails d'un match spécifique.
-
-    Args:
-        match_id (str): ID du match.
-
-    Returns:
-        dict: Détails du match.
-    """
+def get_match_details(match_id, region="EUW"):
     try:
-        url = f"{BASE_URL}/lol/match/v5/matches/{match_id}"
+        url = f"{_continent_base(region)}/lol/match/v5/matches/{match_id}"
         headers = {"X-Riot-Token": RIOT_API_KEY}
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
-        return response.json()  # Retourne les détails du match
+        resp = requests.get(url, headers=headers, timeout=10)
+        if resp.status_code == 429:
+            return {}
+        resp.raise_for_status()
+        return resp.json()
     except requests.RequestException as e:
         print(f"Erreur lors de la récupération des détails du match : {e}")
         return {}

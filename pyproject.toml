@@ -3,27 +3,30 @@ requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "IlolG"
+name = "ilolg"                # recommande en lowercase
 version = "0.2.0"
-description = "Discord Bot for Lol"
-authors = [
-    { name = "LjeAlexis", email = "alexislajugiepro@gmail.com" }
-]
+description = "Discord Bot for LoL"
+authors = [{ name = "LjeAlexis", email = "alexislajugiepro@gmail.com" }]
 license = { text = "MIT" }
+requires-python = ">=3.10"
 dependencies = [
-    "discord.py>=2.0.0",
-    "python-dotenv>=0.21.0",
-    "requests>=2.28.0",
-    "apscheduler>=3.10.0",
-    "pydantic>=version",
+  "discord.py>=2.3,<3",
+  "python-dotenv>=0.21,<2",
+  "requests>=2.28,<3",
+  "apscheduler>=3.10,<4",
+  "pydantic>=2.7,<3",        # ✅ corrige ici
 ]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ilolg*"]
+
 
 [project.urls]
 Homepage = "https://github.com/LjeAlexis"
 Source = "https://github.com/LjeAlexis/IlolG"
 
-[tool.setuptools.packages.find]
-where = ["."]
+
 
 [project.scripts]
-lol-discord-bot = "ilolg.bot:main"
+ilolg = "ilolg.bot:main"
